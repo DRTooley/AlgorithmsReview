@@ -19,7 +19,6 @@
 # HINT: You might experiment with ways to reduce the data set size. For example, trying plotting the points. Can you
 # infer any structure of the optimal solution? Can you use that structure to speed up your algorithm?
 
-import os
 import itertools
 from utils.euclidean_distance import EuclideanDistance
 from utils.node import Node

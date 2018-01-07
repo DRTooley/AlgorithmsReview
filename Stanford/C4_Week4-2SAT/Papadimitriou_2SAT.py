@@ -31,6 +31,8 @@
 
 import random
 import math
+import multiprocessing
+import functools
 
 """
 GenerateRandomAssignment(number_of_variables)
@@ -76,24 +78,38 @@ def RandomCorrection(assignment, problem_statement, errant_clauses):
 
     assignment[abs(random_var_value)-1] = -1*assignment[abs(random_var_value)-1]
 
-def Papadimitriou2Sat(var_count, problem_statement):
-
-    restarts = int(math.log2(var_count))
+def PerformLocalSearch(problem_statement, count=None):
+    print('Restart {} started!'.format(count))
     local_search_iterations = int(2 * math.pow(var_count, 2))
+    random_assignment = GenerateRandomAssignment(var_count)
 
-    for reset_count in range(restarts):
-        print('Restart: {}'.format(reset_count))
-        random_assignment = GenerateRandomAssignment(var_count)
+    for iteration_count in range(local_search_iterations):
+        errant_clauses = VerifySolution(random_assignment, problem_statement)
+        if not errant_clauses:
+            print('Solution found on restart {}, iteration {}!'.format(count, iteration_count))
+            return True, random_assignment
+        else:
+            RandomCorrection(random_assignment, problem_statement, errant_clauses)
 
-        for _ in range(local_search_iterations):
-            errant_clauses = VerifySolution(random_assignment, problem_statement)
-            if not errant_clauses:
-                return True, random_assignment
-            else:
-                RandomCorrection(random_assignment, problem_statement, errant_clauses)
 
     return False, random_assignment
 
+
+def Papadimitriou2Sat(var_count, problem_statement):
+
+    restarts = int(math.log2(var_count))
+    mp = multiprocessing.Pool(multiprocessing.cpu_count())
+    f = functools.partial(PerformLocalSearch, problem_statement)
+    return_vals = mp.map(f, range(restarts))
+
+    #for reset_count in range(restarts):
+    #    print('Restart: {}'.format(reset_count))
+    #    solved, solution = PerformLocalSearch(problem_statement)
+    for solved, solution in return_vals:
+        if solved:
+            return solved, solution
+
+    return False, None
 
 
 
